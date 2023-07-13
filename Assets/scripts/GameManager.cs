@@ -7,23 +7,33 @@ public class GameManager : MonoBehaviour
 
     public ComputeShader shader;
 
-    private void OnPostRender()
-    {
+    private int noiseKernel;
+    private RenderTexture tex;
 
-        Debug.Log("exec");
+
+    /// <summary>
+    /// Start is called at the start of the game.
+    /// We use it to initialize textures and shaders.
+    /// </summary>
+    private void Start()
+    {
+        noiseKernel = shader.FindKernel("Noise");
+        tex = new RenderTexture(256, 256, 24, RenderTextureFormat.ARGB32) { enableRandomWrite = true };
+        tex.Create();
+        shader.SetTexture(noiseKernel, "Result", tex);
     }
 
-    void OnRenderImage(RenderTexture src, RenderTexture dest)
+
+
+    /// <summary>
+    /// OnRenderImage is called after each Frame is rendered.
+    /// We use it to replace the camera rendered image to our
+    /// own image from the SIRDS shader.
+    /// </summary>
+    private void OnRenderImage(RenderTexture src, RenderTexture dest)
     {
-        Debug.Log("exec");
-        int kernelHandle = shader.FindKernel("CSMain");
 
-        RenderTexture tex = new RenderTexture(256, 256, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
-        tex.enableRandomWrite = true;
-        tex.Create();
-
-        shader.SetTexture(kernelHandle, "Result", tex);
-        shader.Dispatch(kernelHandle, 256 / 8, 256 / 8, 1);
+        shader.Dispatch(noiseKernel, 256 / 8, 256 / 8, 1);
 
         Graphics.Blit(tex, dest);
     }
