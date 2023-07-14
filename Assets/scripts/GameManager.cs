@@ -1,11 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
+[RequireComponent(typeof(Camera))]
 public class GameManager : MonoBehaviour
 {
 
+    [FormerlySerializedAs("postprocessMaterial"), SerializeField]
+    public Material PostprocessMaterial;
+
     public ComputeShader shader;
+    public Shader depthShader;
+
+    private Camera depthCam;
+    private RenderTexture depthTex;
 
     private int noiseKernel;
     private RenderTexture tex;
@@ -17,6 +26,9 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void Start()
     {
+        depthCam = this.GetComponent<Camera>();
+        depthCam.depthTextureMode = DepthTextureMode.Depth;
+
         noiseKernel = shader.FindKernel("Noise");
         tex = new RenderTexture(256, 256, 24, RenderTextureFormat.ARGB32) { enableRandomWrite = true };
         tex.Create();
@@ -32,9 +44,10 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void OnRenderImage(RenderTexture src, RenderTexture dest)
     {
+        // noise shader
+        //shader.Dispatch(noiseKernel, 256 / 8, 256 / 8, 1);
+        //Graphics.Blit(tex, dest);
 
-        shader.Dispatch(noiseKernel, 256 / 8, 256 / 8, 1);
-
-        Graphics.Blit(tex, dest);
+        Graphics.Blit(src, dest, PostprocessMaterial);
     }
 }
